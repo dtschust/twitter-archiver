@@ -68,34 +68,12 @@ function formatTweet(tweet) {
   return tweet;
 }
 
-let key;
-let exportedKey;
+const key = 'CHEESE';
 
-window.crypto.subtle.generateKey(
-  {
-      name: "AES-GCM",
-      length: 256,
-  },
-  true,
-  ["encrypt", "decrypt"]
-).then(async (newKey) => {
-  key = newKey;
-  const exported = await window.crypto.subtle.exportKey("raw", key);
-  const exportedKeyBuffer = new Uint8Array(exported);
-  exportedKey = `[${exportedKeyBuffer}]`;
-});
-
-
+// https://stackoverflow.com/questions/18279141/javascript-string-encryption-and-decryption
 function encryptFullText(fullText) {
-  const enc = new TextEncoder();
-  const encoded = enc.encode(fullText);
-  // iv will be needed for decryption
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  return window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: iv },
-    key,
-    encoded,
-  );
+  const encrypted = CryptoJS.AES.encrypt(fullText, key).toString();
+  return encrypted;
 }
 
 
@@ -534,35 +512,20 @@ function processData(data) {
   document.getElementById('search').hidden = false;
 }
 
-let key;
-let exportedKey = ${exportedKey};
-
-async function importKey() {
-  return window.crypto.subtle.importKey("raw", exportedKey, "AES-GCM", true, [
-      "encrypt",
-      "decrypt",
-  ]).then((newKey) => {
-    debugger;
-    key = newKey;
-  });
-}
+let key = 'CHEESE';
 
 function decryptFullText(encryptedFullText) {
-  const decryptedText = window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encryptedFullText);
-  debugger;
+  const decryptedText = CryptoJS.AES.decrypt(encryptedFullText, key).toString(CryptoJS.enc.Utf8);
   return decryptedText;
 }
 
-importKey().then(() => {
-  debugger;
-  searchDocuments.forEach((tweet) => {
-    tweet.full_text = decryptFullText(tweet.full_text);
-  });
+searchDocuments.forEach((tweet) => {
+  tweet.full_text = decryptFullText(tweet.full_text);
+});
 
-  processData(searchDocuments);
-  let browseDocuments = searchDocuments.sort(function(a,b){
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
+processData(searchDocuments);
+let browseDocuments = searchDocuments.sort(function(a,b){
+  return new Date(b.created_at) - new Date(a.created_at);
 });
 
 function sortResults(criterion) {
@@ -712,6 +675,7 @@ function makeOutputIndexHtml(accountInfo) {
     </div>
   </div>
 </body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js" integrity="sha256-/H4YS+7aYb9kJ5OKhFYPUjSJdrtV6AeyJOtTkw6X72o=" crossorigin="anonymous"></script>
 <script src="searchDocuments.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
 <script src="app.js"></script>
